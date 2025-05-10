@@ -13,7 +13,7 @@ struct maimatchApp: App {
 
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            LocationSelectionView()
                 .environment(\.managedObjectContext, persistenceController.container.viewContext)
         }
     }

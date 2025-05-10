@@ -10,77 +10,88 @@ import CoreData
 
 struct ContentView: View {
     @Environment(\.managedObjectContext) private var viewContext
-
-    @FetchRequest(
-        sortDescriptors: [NSSortDescriptor(keyPath: \Item.timestamp, ascending: true)],
-        animation: .default)
-    private var items: FetchedResults<Item>
-
+    @StateObject private var viewModel: ForumViewModel
+    @State private var showingCreatePost = false
+    let selectedLocation: ArcadeLocation
+    
+    @FetchRequest var posts: FetchedResults<ForumPost>
+    
+    init(viewContext: NSManagedObjectContext, selectedLocation: ArcadeLocation) {
+        self.selectedLocation = selectedLocation
+        _viewModel = StateObject(wrappedValue: ForumViewModel(viewContext: viewContext))
+        
+        // Initialize the FetchRequest with the location predicate
+        _posts = FetchRequest(
+            entity: ForumPost.entity(),
+            sortDescriptors: [NSSortDescriptor(keyPath: \ForumPost.createdAt, ascending: false)],
+            predicate: NSPredicate(format: "location == %@", selectedLocation.rawValue)
+        )
+    }
+    
     var body: some View {
-        NavigationView {
+        ZStack {
             List {
-                ForEach(items) { item in
+                if posts.isEmpty {
+                    Text("No posts yet in \(selectedLocation.displayName)")
+                        .foregroundColor(.secondary)
+                        .padding()
+                }
+                
+                ForEach(posts) { post in
                     NavigationLink {
-                        Text("Item at \(item.timestamp!, formatter: itemFormatter)")
+                        ForumPostView(post: post)
                     } label: {
-                        Text(item.timestamp!, formatter: itemFormatter)
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text(post.title ?? "")
+                                .font(.headline)
+                                .foregroundColor(.primary)
+                            
+                            HStack {
+                                Image(systemName: "person.circle.fill")
+                                    .foregroundColor(.blue)
+                                Text(post.authorName ?? "Unknown")
+                                    .font(.subheadline)
+                                    .foregroundColor(.secondary)
+                                Spacer()
+                                if let date = post.createdAt {
+                                    Text(date, style: .relative)
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                }
+                            }
+                        }
+                        .padding(.vertical, 8)
                     }
                 }
-                .onDelete(perform: deleteItems)
+                .onDelete { indexSet in
+                    indexSet.forEach { index in
+                        viewModel.deletePost(posts[index])
+                    }
+                }
             }
+            .listStyle(InsetGroupedListStyle())
+            .navigationTitle(selectedLocation.displayName)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    EditButton()
-                }
-                ToolbarItem {
-                    Button(action: addItem) {
-                        Label("Add Item", systemImage: "plus")
+                    Button {
+                        showingCreatePost = true
+                    } label: {
+                        Image(systemName: "square.and.pencil")
+                            .font(.system(size: 16, weight: .semibold))
                     }
                 }
             }
-            Text("Select an item")
-        }
-    }
-
-    private func addItem() {
-        withAnimation {
-            let newItem = Item(context: viewContext)
-            newItem.timestamp = Date()
-
-            do {
-                try viewContext.save()
-            } catch {
-                // Replace this implementation with code to handle the error appropriately.
-                // fatalError() causes the application to generate a crash log and terminate. You should not use this function in a shipping application, although it may be useful during development.
-                let nsError = error as NSError
-                fatalError("Unresolved error \(nsError), \(nsError.userInfo)")
+            .sheet(isPresented: $showingCreatePost) {
+                CreatePostView(viewModel: viewModel, preselectedLocation: selectedLocation)
             }
         }
-    }
-
-    private func deleteItems(offsets: IndexSet) {
-        withAnimation {
-            offsets.map { items[$0] }.forEach(viewContext.delete)
-
-            do {
-                try viewContext.save()
-            } catch {
-                // Replace this implementation with code to handle the error appropriately.
-                // fatalError() causes the application to generate a crash log and terminate. You should not use this function in a shipping application, although it may be useful during development.
-                let nsError = error as NSError
-                fatalError("Unresolved error \(nsError), \(nsError.userInfo)")
-            }
-        }
+        .withDefaultBackground()
     }
 }
 
-private let itemFormatter: DateFormatter = {
-    let formatter = DateFormatter()
-    formatter.dateStyle = .short
-    formatter.timeStyle = .medium
-    return formatter
-}()
-
 #Preview {
-    ContentView().environment(\.managedObjectContext, PersistenceController.preview.container.viewContext)
+    NavigationView {
+        LocationSelectionView()
+            .environment(\.managedObjectContext, PersistenceController.preview.container.viewContext)
+    }
 }
