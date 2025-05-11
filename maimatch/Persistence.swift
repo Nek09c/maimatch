@@ -17,16 +17,22 @@ struct PersistenceController {
         
         // Create sample forum posts for preview
         let locations = ArcadeLocation.allCases
+        let genres = Genre.allCases
         
         for i in 0..<8 {
             let newPost = ForumPost(context: viewContext)
             let location = locations[i % locations.count]
+            // Select 1-3 random genres for each post
+            let randomGenreCount = Int.random(in: 1...3)
+            let selectedGenres = Array(genres.shuffled().prefix(randomGenreCount))
+            
             newPost.id = UUID()
             newPost.title = "Sample Post \(i + 1)"
             newPost.content = "This is a sample post content for post number \(i + 1)."
             newPost.authorName = "Test User \(i + 1)"
             newPost.location = location.rawValue
             newPost.createdAt = Date().addingTimeInterval(Double(-i * 86400))
+            newPost.genresList = selectedGenres
         }
         
         do {
@@ -76,9 +82,11 @@ struct PersistenceController {
             let storeURL = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
                 .appendingPathComponent("MaiMatch_\(UUID().uuidString).sqlite")
             
-            container.persistentStoreDescriptions = [
-                NSPersistentStoreDescription(url: storeURL)
-            ]
+            let description = NSPersistentStoreDescription(url: storeURL)
+            description.shouldMigrateStoreAutomatically = true
+            description.shouldInferMappingModelAutomatically = true
+            
+            container.persistentStoreDescriptions = [description]
             
             print("DEBUG: Using store URL: \(storeURL.path)")
         }

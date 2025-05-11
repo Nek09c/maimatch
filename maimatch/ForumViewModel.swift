@@ -9,7 +9,7 @@ class ForumViewModel: ObservableObject {
         self.viewContext = viewContext
     }
     
-    func createPost(title: String, content: String, authorName: String, location: ArcadeLocation) {
+    func createPost(title: String, content: String, authorName: String, location: ArcadeLocation, genres: [Genre]) {
         print("DEBUG: Creating post for location: \(location.rawValue)")
         
         let newPost = ForumPost(context: viewContext)
@@ -19,6 +19,7 @@ class ForumViewModel: ObservableObject {
         newPost.authorName = authorName
         newPost.location = location.rawValue
         newPost.createdAt = Date()
+        newPost.genresList = genres
         
         do {
             try viewContext.save()

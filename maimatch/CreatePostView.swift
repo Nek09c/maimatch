@@ -7,7 +7,12 @@ struct CreatePostView: View {
     @State private var title: String = ""
     @State private var content: String = ""
     @State private var authorName: String = ""
+    @State private var selectedGenres: Set<Genre> = []
     let preselectedLocation: ArcadeLocation
+    
+    private var isFormValid: Bool {
+        !title.isEmpty && !content.isEmpty && !authorName.isEmpty && !selectedGenres.isEmpty && selectedGenres.count <= 3
+    }
     
     var body: some View {
         NavigationView {
@@ -27,6 +32,31 @@ struct CreatePostView: View {
                     }
                 } header: {
                     Text("Post Details")
+                }
+                
+                Section {
+                    ForEach(Genre.allCases) { genre in
+                        HStack {
+                            Text(genre.displayName)
+                            Spacer()
+                            if selectedGenres.contains(genre) {
+                                Image(systemName: "checkmark")
+                                    .foregroundColor(.blue)
+                            }
+                        }
+                        .contentShape(Rectangle())
+                        .onTapGesture {
+                            if selectedGenres.contains(genre) {
+                                selectedGenres.remove(genre)
+                            } else if selectedGenres.count < 3 {
+                                selectedGenres.insert(genre)
+                            }
+                        }
+                    }
+                } header: {
+                    Text("Favorite Genres (Max 3)")
+                } footer: {
+                    Text("Select up to three favorite genres")
                 }
                 
                 Section {
@@ -57,14 +87,15 @@ struct CreatePostView: View {
                             title: title,
                             content: content,
                             authorName: authorName,
-                            location: preselectedLocation
+                            location: preselectedLocation,
+                            genres: Array(selectedGenres)
                         )
                         dismiss()
                     } label: {
                         Text("Post")
                             .bold()
                     }
-                    .disabled(title.isEmpty || content.isEmpty || authorName.isEmpty)
+                    .disabled(!isFormValid)
                 }
             }
         }

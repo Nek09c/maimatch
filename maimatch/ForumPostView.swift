@@ -10,6 +10,10 @@ struct ForumPostView: View {
         return formatter
     }()
     
+    private var postGenres: [String] {
+        post.genresList.map { $0.displayName }
+    }
+    
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
@@ -42,6 +46,22 @@ struct ForumPostView: View {
                                 Text(date, formatter: dateFormatter)
                                     .font(.subheadline)
                                     .foregroundColor(.secondary)
+                            }
+                        }
+                    }
+                    
+                    if !postGenres.isEmpty {
+                        ScrollView(.horizontal, showsIndicators: false) {
+                            HStack(spacing: 8) {
+                                ForEach(postGenres, id: \.self) { genre in
+                                    Text(genre)
+                                        .font(.caption)
+                                        .foregroundColor(.white)
+                                        .padding(.horizontal, 8)
+                                        .padding(.vertical, 4)
+                                        .background(Color.purple)
+                                        .cornerRadius(12)
+                                }
                             }
                         }
                     }
