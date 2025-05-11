@@ -4,6 +4,7 @@
         <attribute name="authorName" optional="NO" attributeType="String"/>
         <attribute name="content" optional="NO" attributeType="String"/>
         <attribute name="createdAt" optional="NO" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="genreString" optional="YES" attributeType="String"/>
         <attribute name="id" optional="NO" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="location" optional="NO" attributeType="String"/>
         <attribute name="title" optional="NO" attributeType="String"/>
