@@ -9,7 +9,7 @@ class ForumViewModel: ObservableObject {
         self.viewContext = viewContext
     }
     
-    func createPost(title: String, content: String, authorName: String, location: ArcadeLocation, genres: [Genre], songs: [SongModel]) {
+    func createPost(title: String, content: String, authorName: String, location: ArcadeLocation, genres: [Genre], songs: [SongModel], levels: [Level]) {
         print("DEBUG: Creating post for location: \(location.rawValue)")
         
         let newPost = ForumPost(context: viewContext)
@@ -21,6 +21,7 @@ class ForumViewModel: ObservableObject {
         newPost.createdAt = Date()
         newPost.genresList = genres
         newPost.selectedSongs = songs
+        newPost.selectedLevels = levels
         newPost.isMatched = false
         
         do {

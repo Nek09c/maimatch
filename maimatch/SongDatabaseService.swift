@@ -1140,4 +1140,4 @@ songs.append(contentsOf: [
         guard !query.isEmpty else { return [] }
         return allSongs.filter { $0.title.lowercased().contains(query.lowercased()) }
     }
-}
+} 

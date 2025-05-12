@@ -22,6 +22,10 @@ struct ForumPostView: View {
         post.selectedSongs
     }
     
+    private var postLevels: [Level] {
+        post.selectedLevels
+    }
+    
     private var isCreator: Bool {
         return post.authorName == currentUsername
     }
@@ -64,10 +68,10 @@ struct ForumPostView: View {
                     
                     // Match status indicator
                     HStack {
-                        Text("Status:")
+                        Text("狀態:")
                             .font(.headline)
                         
-                        Text(post.isMatched ? "Matched" : "Still looking")
+                        Text(post.isMatched ? "已配對" : "尋找中")
                             .foregroundColor(.white)
                             .padding(.horizontal, 10)
                             .padding(.vertical, 5)
@@ -83,7 +87,7 @@ struct ForumPostView: View {
                                 let impactFeedback = UIImpactFeedbackGenerator(style: .medium)
                                 impactFeedback.impactOccurred()
                             }) {
-                                Text(post.isMatched ? "Reopen Post" : "Mark as Matched")
+                                Text(post.isMatched ? "重新開放" : "標記為已配對")
                                     .foregroundColor(.white)
                                     .padding(.horizontal, 12)
                                     .padding(.vertical, 6)
@@ -94,25 +98,56 @@ struct ForumPostView: View {
                     }
                     .padding(.vertical, 4)
                     
-                    if !postGenres.isEmpty {
-                        ScrollView(.horizontal, showsIndicators: false) {
-                            HStack(spacing: 8) {
-                                ForEach(postGenres, id: \.self) { genre in
-                                    Text(genre)
-                                        .font(.caption)
-                                        .foregroundColor(.white)
-                                        .padding(.horizontal, 8)
-                                        .padding(.vertical, 4)
-                                        .background(Color.purple)
-                                        .cornerRadius(12)
+                    // Display difficulty levels
+                    if !postLevels.isEmpty {
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("難度水平")
+                                .font(.headline)
+                                .foregroundColor(.primary)
+                            
+                            ScrollView(.horizontal, showsIndicators: false) {
+                                HStack(spacing: 8) {
+                                    ForEach(postLevels) { level in
+                                        Text(level.displayName)
+                                            .font(.caption)
+                                            .foregroundColor(.white)
+                                            .padding(.horizontal, 8)
+                                            .padding(.vertical, 4)
+                                            .background(Color(level.color))
+                                            .cornerRadius(12)
+                                    }
                                 }
                             }
                         }
+                        .padding(.vertical, 4)
+                    }
+                    
+                    if !postGenres.isEmpty {
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("歌曲分類")
+                                .font(.headline)
+                                .foregroundColor(.primary)
+                            
+                            ScrollView(.horizontal, showsIndicators: false) {
+                                HStack(spacing: 8) {
+                                    ForEach(postGenres, id: \.self) { genre in
+                                        Text(genre)
+                                            .font(.caption)
+                                            .foregroundColor(.white)
+                                            .padding(.horizontal, 8)
+                                            .padding(.vertical, 4)
+                                            .background(Color.purple)
+                                            .cornerRadius(12)
+                                    }
+                                }
+                            }
+                        }
+                        .padding(.vertical, 4)
                     }
                     
                     if !postSongs.isEmpty {
                         VStack(alignment: .leading, spacing: 8) {
-                            Text("Selected Songs")
+                            Text("已選歌曲")
                                 .font(.headline)
                                 .foregroundColor(.primary)
                             
@@ -166,18 +201,18 @@ struct ForumPostView: View {
                 }
             }
         }
-        .alert("Set Your Username", isPresented: $showingUsernamePrompt) {
-            TextField("Username", text: $currentUsername)
+        .alert("設置用戶名", isPresented: $showingUsernamePrompt) {
+            TextField("用戶名", text: $currentUsername)
             
-            Button("Cancel", role: .cancel) { }
+            Button("取消", role: .cancel) { }
             
-            Button("Save") {
+            Button("保存") {
                 if !currentUsername.isEmpty {
                     UserDefaults.standard.set(currentUsername, forKey: "username")
                 }
             }
         } message: {
-            Text("Enter your username to identify yourself as the post creator.")
+            Text("輸入您的用戶名以識別您是否為帖子創建者。")
         }
         .onAppear {
             // Load username from UserDefaults

@@ -7,11 +7,12 @@
         <attribute name="genreString" optional="YES" attributeType="String"/>
         <attribute name="id" optional="NO" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="isMatched" optional="YES" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+        <attribute name="levelString" optional="YES" attributeType="String"/>
         <attribute name="location" optional="NO" attributeType="String"/>
         <attribute name="songIdsString" optional="YES" attributeType="String"/>
         <attribute name="title" optional="NO" attributeType="String"/>
     </entity>
     <elements>
-        <element name="ForumPost" positionX="-63" positionY="-18" width="128" height="164"/>
+        <element name="ForumPost" positionX="-63" positionY="-18" width="128" height="179"/>
     </elements>
 </model>
