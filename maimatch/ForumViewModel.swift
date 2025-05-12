@@ -21,6 +21,7 @@ class ForumViewModel: ObservableObject {
         newPost.createdAt = Date()
         newPost.genresList = genres
         newPost.selectedSongs = songs
+        newPost.isMatched = false
         
         do {
             try viewContext.save()
@@ -45,6 +46,23 @@ class ForumViewModel: ObservableObject {
             print("DEBUG: Successfully deleted post")
         } catch {
             print("DEBUG: Error deleting post: \(error)")
+        }
+    }
+    
+    func toggleMatchStatus(post: ForumPost, currentUsername: String) {
+        // Only allow the post creator to toggle match status
+        guard post.authorName == currentUsername else {
+            print("DEBUG: Cannot toggle match status - user is not the post creator")
+            return
+        }
+        
+        post.isMatched.toggle()
+        
+        do {
+            try viewContext.save()
+            print("DEBUG: Successfully updated match status to \(post.isMatched)")
+        } catch {
+            print("DEBUG: Error updating match status: \(error)")
         }
     }
 } 

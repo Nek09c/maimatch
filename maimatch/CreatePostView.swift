@@ -1,42 +1,188 @@
 import SwiftUI
 
 struct CreatePostView: View {
-    @Environment(\.dismiss) private var dismiss
+    @Environment(\.presentationMode) var presentationMode
     @ObservedObject var viewModel: ForumViewModel
     
     @State private var title: String = ""
     @State private var content: String = ""
-    @State private var authorName: String = ""
-    @State private var selectedGenres: Set<Genre> = []
+    @State private var authorName: String = UserDefaults.standard.string(forKey: "username") ?? ""
+    @State private var selectedLocation: ArcadeLocation
+    @State private var selectedGenres: [Genre] = []
     @State private var selectedSongs: [SongModel] = []
-    let preselectedLocation: ArcadeLocation
+    @State private var showGenreSelector = false
     
-    private var isFormValid: Bool {
-        !title.isEmpty && !content.isEmpty && !authorName.isEmpty && !selectedGenres.isEmpty && selectedGenres.count <= 3
+    @State private var isValid: Bool = false
+    
+    // Create a formatter for placeholders
+    private let placeholderDateFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd HH:mm"
+        return formatter
+    }()
+    
+    init(viewModel: ForumViewModel, preselectedLocation: ArcadeLocation? = nil) {
+        self.viewModel = viewModel
+        self._selectedLocation = State(initialValue: preselectedLocation ?? .diamondHill)
     }
     
     var body: some View {
         NavigationView {
             Form {
-                Section {
-                    TextField("Title", text: $title)
-                        .font(.headline)
+                Section(header: Text("Post內容")) {
+                    TextField("標題(想R機? 想被R機?)", text: $title)
+                        .autocorrectionDisabled()
                     
-                    TextField("Your Name", text: $authorName)
-                        .font(.subheadline)
+                    ZStack(alignment: .topLeading) {
+                        if content.isEmpty {
+                            Text("個人資訊(要點樣搵你, 你著咩衫, 有咩特徵...)")
+                                .foregroundColor(Color(.placeholderText))
+                                .padding(.top, 8)
+                                .padding(.leading, 4)
+                        }
                         
-                    HStack {
-                        Text("Location")
-                        Spacer()
-                        Text(preselectedLocation.displayName)
-                            .foregroundColor(.secondary)
+                        TextEditor(text: $content)
+                            .frame(minHeight: 100)
+                            .autocorrectionDisabled()
                     }
-                } header: {
-                    Text("Post Details")
+                    
+                    TextField("你嘅名(maimai名/稱呼)", text: $authorName)
+                        .autocorrectionDisabled()
+                        .onChange(of: authorName) { newValue in
+                            if !newValue.isEmpty {
+                                UserDefaults.standard.set(newValue, forKey: "username")
+                            }
+                        }
+                    
+                    HStack {
+                        Text("Maimai地點:")
+                        Spacer()
+                        Picker("", selection: $selectedLocation) {
+                            ForEach(ArcadeLocation.allCases, id: \.self) { location in
+                                Text(location.displayName).tag(location)
+                            }
+                        }
+                        .pickerStyle(MenuPickerStyle())
+                    }
                 }
                 
-                Section {
-                    ForEach(Genre.allCases) { genre in
+                Section(header: Text("歌曲分類(可唔揀)")) {
+                    HStack {
+                        if selectedGenres.isEmpty {
+                            Text("未揀")
+                                .foregroundColor(.secondary)
+                        } else {
+                            ScrollView(.horizontal, showsIndicators: false) {
+                                HStack {
+                                    ForEach(selectedGenres, id: \.self) { genre in
+                                        GenreChip(genre: genre, isSelected: true) {
+                                            selectedGenres.removeAll(where: { $0 == genre })
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        
+                        Spacer()
+                        
+                        Button(action: {
+                            showGenreSelector = true
+                        }) {
+                            Image(systemName: "plus.circle.fill")
+                                .foregroundColor(.blue)
+                        }
+                        .sheet(isPresented: $showGenreSelector) {
+                            GenreSelectorView(selectedGenres: $selectedGenres)
+                        }
+                    }
+                }
+                
+                Section(header: Text("歌曲(可唔揀)")) {
+                    SongSelectionUI(selectedSongs: $selectedSongs)
+                }
+            }
+            .navigationTitle("開Post")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button("Cancel") {
+                        presentationMode.wrappedValue.dismiss()
+                    }
+                }
+                
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Post") {
+                        createPost()
+                    }
+                    .disabled(!isValid)
+                    .foregroundColor(isValid ? .blue : .secondary)
+                }
+            }
+            .onChange(of: title) { _ in validateForm() }
+            .onChange(of: content) { _ in validateForm() }
+            .onChange(of: authorName) { _ in validateForm() }
+            .onAppear {
+                validateForm()
+            }
+        }
+        .withDefaultBackground()
+    }
+    
+    private func validateForm() {
+        isValid = !title.isEmpty && !content.isEmpty && !authorName.isEmpty
+    }
+    
+    private func createPost() {
+        viewModel.createPost(
+            title: title,
+            content: content,
+            authorName: authorName,
+            location: selectedLocation,
+            genres: selectedGenres,
+            songs: selectedSongs
+        )
+        
+        presentationMode.wrappedValue.dismiss()
+    }
+}
+
+struct GenreChip: View {
+    let genre: Genre
+    let isSelected: Bool
+    let onTap: () -> Void
+    
+    var body: some View {
+        HStack(spacing: 4) {
+            Text(genre.displayName)
+                .font(.system(size: 14))
+                .foregroundColor(isSelected ? .white : .primary)
+            
+            if isSelected {
+                Button(action: onTap) {
+                    Image(systemName: "xmark.circle.fill")
+                        .font(.system(size: 12))
+                        .foregroundColor(.white.opacity(0.8))
+                }
+            }
+        }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 5)
+        .background(isSelected ? Color.purple : Color(.systemGray5))
+        .cornerRadius(14)
+    }
+}
+
+struct GenreSelectorView: View {
+    @Binding var selectedGenres: [Genre]
+    @Environment(\.presentationMode) var presentationMode
+    
+    var body: some View {
+        NavigationView {
+            List {
+                ForEach(Genre.allCases, id: \.self) { genre in
+                    Button(action: {
+                        toggleGenre(genre)
+                    }) {
                         HStack {
                             Text(genre.displayName)
                             Spacer()
@@ -45,70 +191,26 @@ struct CreatePostView: View {
                                     .foregroundColor(.blue)
                             }
                         }
-                        .contentShape(Rectangle())
-                        .onTapGesture {
-                            if selectedGenres.contains(genre) {
-                                selectedGenres.remove(genre)
-                            } else if selectedGenres.count < 3 {
-                                selectedGenres.insert(genre)
-                            }
-                        }
                     }
-                } header: {
-                    Text("Favorite Genres (Max 3)")
-                } footer: {
-                    Text("Select up to three favorite genres")
-                }
-                
-                Section {
-                    SongSelectionUI(selectedSongs: $selectedSongs)
-                } header: {
-                    Text("Selected Songs (Max 4)")
-                } footer: {
-                    Text("Select up to four songs")
-                }
-                
-                Section {
-                    TextEditor(text: $content)
-                        .frame(minHeight: 200)
-                        .font(.body)
-                } header: {
-                    Text("Content")
-                } footer: {
-                    Text("Share your thoughts with the community")
-                        .foregroundColor(.secondary)
+                    .foregroundColor(.primary)
                 }
             }
-            .scrollContentBackground(.hidden)
-            .background(Color(.systemGroupedBackground))
-            .navigationTitle("Create Post")
-            .navigationBarTitleDisplayMode(.inline)
+            .navigationTitle("選擇分類")
             .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Cancel") {
-                        dismiss()
-                    }
-                }
-                
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button {
-                        viewModel.createPost(
-                            title: title,
-                            content: content,
-                            authorName: authorName,
-                            location: preselectedLocation,
-                            genres: Array(selectedGenres),
-                            songs: selectedSongs
-                        )
-                        dismiss()
-                    } label: {
-                        Text("Post")
-                            .bold()
+                    Button("Done") {
+                        presentationMode.wrappedValue.dismiss()
                     }
-                    .disabled(!isFormValid)
                 }
             }
         }
-        .withDefaultBackground()
+    }
+    
+    private func toggleGenre(_ genre: Genre) {
+        if selectedGenres.contains(genre) {
+            selectedGenres.removeAll(where: { $0 == genre })
+        } else {
+            selectedGenres.append(genre)
+        }
     }
 } 

@@ -2,6 +2,10 @@ import SwiftUI
 
 struct ForumPostView: View {
     let post: ForumPost
+    var viewModel: ForumViewModel
+    @State private var currentUsername: String = UserDefaults.standard.string(forKey: "username") ?? ""
+    @State private var showingUsernamePrompt = false
+    @Environment(\.presentationMode) var presentationMode
     
     private let dateFormatter: DateFormatter = {
         let formatter = DateFormatter()
@@ -16,6 +20,10 @@ struct ForumPostView: View {
     
     private var postSongs: [SongModel] {
         post.selectedSongs
+    }
+    
+    private var isCreator: Bool {
+        return post.authorName == currentUsername
     }
     
     var body: some View {
@@ -53,6 +61,38 @@ struct ForumPostView: View {
                             }
                         }
                     }
+                    
+                    // Match status indicator
+                    HStack {
+                        Text("Status:")
+                            .font(.headline)
+                        
+                        Text(post.isMatched ? "Matched" : "Still looking")
+                            .foregroundColor(.white)
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 5)
+                            .background(post.isMatched ? Color.green : Color.orange)
+                            .cornerRadius(8)
+                        
+                        Spacer()
+                        
+                        if isCreator {
+                            Button(action: {
+                                viewModel.toggleMatchStatus(post: post, currentUsername: currentUsername)
+                                // Force view to refresh by simulating a navigation action
+                                let impactFeedback = UIImpactFeedbackGenerator(style: .medium)
+                                impactFeedback.impactOccurred()
+                            }) {
+                                Text(post.isMatched ? "Reopen Post" : "Mark as Matched")
+                                    .foregroundColor(.white)
+                                    .padding(.horizontal, 12)
+                                    .padding(.vertical, 6)
+                                    .background(Color.blue)
+                                    .cornerRadius(8)
+                            }
+                        }
+                    }
+                    .padding(.vertical, 4)
                     
                     if !postGenres.isEmpty {
                         ScrollView(.horizontal, showsIndicators: false) {
@@ -117,5 +157,31 @@ struct ForumPostView: View {
         }
         .withDefaultBackground()
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .navigationBarTrailing) {
+                Button(action: {
+                    showingUsernamePrompt = true
+                }) {
+                    Image(systemName: "person.crop.circle")
+                }
+            }
+        }
+        .alert("Set Your Username", isPresented: $showingUsernamePrompt) {
+            TextField("Username", text: $currentUsername)
+            
+            Button("Cancel", role: .cancel) { }
+            
+            Button("Save") {
+                if !currentUsername.isEmpty {
+                    UserDefaults.standard.set(currentUsername, forKey: "username")
+                }
+            }
+        } message: {
+            Text("Enter your username to identify yourself as the post creator.")
+        }
+        .onAppear {
+            // Load username from UserDefaults
+            currentUsername = UserDefaults.standard.string(forKey: "username") ?? ""
+        }
     }
 } 

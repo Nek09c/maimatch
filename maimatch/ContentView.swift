@@ -32,19 +32,32 @@ struct ContentView: View {
         ZStack {
             List {
                 if posts.isEmpty {
-                    Text("No posts yet in \(selectedLocation.displayName)")
+                    Text("\(selectedLocation.displayName) 未有Post")
                         .foregroundColor(.secondary)
                         .padding()
                 }
                 
                 ForEach(posts) { post in
                     NavigationLink {
-                        ForumPostView(post: post)
+                        ForumPostView(post: post, viewModel: viewModel)
                     } label: {
                         VStack(alignment: .leading, spacing: 8) {
-                            Text(post.title ?? "")
-                                .font(.headline)
-                                .foregroundColor(.primary)
+                            HStack {
+                                Text(post.title ?? "")
+                                    .font(.headline)
+                                    .foregroundColor(.primary)
+                                
+                                Spacer()
+                                
+                                // Match status indicator
+                                Text(post.isMatched ? "Matched" : "Still looking")
+                                    .font(.caption)
+                                    .foregroundColor(.white)
+                                    .padding(.horizontal, 8)
+                                    .padding(.vertical, 4)
+                                    .background(post.isMatched ? Color.green : Color.orange)
+                                    .cornerRadius(8)
+                            }
                             
                             HStack {
                                 Image(systemName: "person.circle.fill")
