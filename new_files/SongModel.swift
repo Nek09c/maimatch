@@ -1,0 +1,29 @@
+import Foundation
+
+struct SongModel: Identifiable, Hashable {
+    let id: String
+    let title: String
+    let category: SongCategory
+    
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
+    }
+    
+    static func == (lhs: SongModel, rhs: SongModel) -> Bool {
+        lhs.id == rhs.id
+    }
+}
+
+enum SongCategory: String, CaseIterable {
+    case popAndAnime = "Pop & Anime"
+    case niconicoAndVocaloid = "Niconico & Vocaloid"
+    case touhou = "東方project"
+    case gameAndVariety = "Game & Variety"
+    case maimai = "Maimai"
+    case ongekiAndChunithm = "Ongeki & Chunithm"
+    case partyRoom = "宴会場"
+    
+    var displayName: String {
+        return rawValue
+    }
+} 

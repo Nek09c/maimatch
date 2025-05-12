@@ -7,6 +7,7 @@
         <attribute name="genreString" optional="YES" attributeType="String"/>
         <attribute name="id" optional="NO" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="location" optional="NO" attributeType="String"/>
+        <attribute name="songIdsString" optional="YES" attributeType="String"/>
         <attribute name="title" optional="NO" attributeType="String"/>
     </entity>
     <elements>

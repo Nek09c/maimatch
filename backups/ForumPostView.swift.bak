@@ -14,7 +14,7 @@ struct ForumPostView: View {
         post.genresList.map { $0.displayName }
     }
     
-    private var postSongs: [SongModel] {
+    private var postSongs: [Song] {
         post.selectedSongs
     }
     
