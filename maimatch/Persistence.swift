@@ -32,6 +32,7 @@ struct PersistenceController {
             newPost.createdAt = Date().addingTimeInterval(Double(-i * 86400))
             newPost.genresList = selectedGenres
             newPost.selectedSongs = selectedSongs
+            newPost.isMatched = Bool.random() // Randomly set match status for preview
         }
         
         do {
