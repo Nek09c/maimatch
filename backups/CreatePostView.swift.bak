@@ -8,7 +8,7 @@ struct CreatePostView: View {
     @State private var content: String = ""
     @State private var authorName: String = ""
     @State private var selectedGenres: Set<Genre> = []
-    @State private var selectedSongs: [SongModel] = []
+    @State private var selectedSongs: [Song] = []
     let preselectedLocation: ArcadeLocation
     
     private var isFormValid: Bool {
@@ -61,7 +61,7 @@ struct CreatePostView: View {
                 }
                 
                 Section {
-                    SongSelectionUI(selectedSongs: $selectedSongs)
+                    SongSelectionView(selectedSongs: $selectedSongs)
                 } header: {
                     Text("Selected Songs (Max 4)")
                 } footer: {

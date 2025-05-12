@@ -10,22 +10,9 @@
 		743391C02DCF4C6500115F5A /* maimatch.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = maimatch.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
-/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		746BA50F2DD1DCB70096344E /* Exceptions for "maimatch" folder in "maimatch" target */ = {
-			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
-			membershipExceptions = (
-				Info.plist,
-			);
-			target = 743391BF2DCF4C6500115F5A /* maimatch */;
-		};
-/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
-
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		743391C22DCF4C6500115F5A /* maimatch */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-				746BA50F2DD1DCB70096344E /* Exceptions for "maimatch" folder in "maimatch" target */,
-			);
 			path = maimatch;
 			sourceTree = "<group>";
 		};

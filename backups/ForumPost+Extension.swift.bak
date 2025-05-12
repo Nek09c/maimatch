@@ -20,12 +20,12 @@ extension ForumPost {
         }
     }
     
-    var selectedSongs: [SongModel] {
+    var selectedSongs: [Song] {
         get {
             guard let songIdsString = self.value(forKey: "songIdsString") as? String else { return [] }
             let songIds = songIdsString.split(separator: Self.songSeparator).map { String($0) }
             return songIds.compactMap { songId in
-                SongDatabaseService.shared.allSongs.first { $0.id == songId }
+                SongDatabase.shared.allSongs.first { $0.id == songId }
             }
         }
         set {

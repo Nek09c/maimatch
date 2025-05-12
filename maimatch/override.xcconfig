@@ -1,0 +1,2 @@
+// Override the conflicting Info.plist settings
+GENERATE_INFOPLIST_FILE = NO 

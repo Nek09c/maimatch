@@ -1,3 +1,10 @@
+//
+//  Persistence.swift
+//  maimatch
+//
+//  Created by carlson chuang on 10/5/2025.
+//
+
 import CoreData
 
 struct PersistenceController {
@@ -11,7 +18,7 @@ struct PersistenceController {
         // Create sample forum posts for preview
         let locations = ArcadeLocation.allCases
         let genres = Genre.allCases
-        let songs = SongDatabaseService.shared.allSongs
+        let songs = SongDatabase.shared.allSongs
         
         for i in 0..<8 {
             let newPost = ForumPost(context: viewContext)
@@ -45,6 +52,32 @@ struct PersistenceController {
 
     let container: NSPersistentContainer
     
+    private static func loadStore(for container: NSPersistentContainer, completion: @escaping (Error?) -> Void) {
+        container.loadPersistentStores { description, error in
+            if let error = error as NSError? {
+                print("DEBUG: Failed to load store with error: \(error), \(error.userInfo)")
+                
+                // If loading fails, try to destroy and recreate
+                if let url = description.url {
+                    print("DEBUG: Attempting to destroy and recreate store at: \(url.path)")
+                    do {
+                        try container.persistentStoreCoordinator.destroyPersistentStore(at: url, ofType: description.type, options: nil)
+                        try container.persistentStoreCoordinator.addPersistentStore(ofType: description.type, configurationName: nil, at: url, options: nil)
+                        print("DEBUG: Successfully recreated store")
+                        completion(nil)
+                    } catch {
+                        print("DEBUG: Failed to recover from store error: \(error)")
+                        completion(error)
+                    }
+                } else {
+                    completion(error)
+                }
+            } else {
+                completion(nil)
+            }
+        }
+    }
+
     init(inMemory: Bool = false) {
         container = NSPersistentContainer(name: "maimatch")
         
@@ -72,4 +105,4 @@ struct PersistenceController {
         
         container.viewContext.automaticallyMergesChangesFromParent = true
     }
-} 
+}
