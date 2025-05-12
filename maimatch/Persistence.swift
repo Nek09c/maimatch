@@ -11,6 +11,7 @@ struct PersistenceController {
         // Create sample forum posts for preview
         let locations = ArcadeLocation.allCases
         let genres = Genre.allCases
+        let levels = Level.allCases
         let songs = SongDatabaseService.shared.allSongs
         
         for i in 0..<8 {
@@ -24,6 +25,10 @@ struct PersistenceController {
             let randomSongCount = Int.random(in: 0...4)
             let selectedSongs = Array(songs.shuffled().prefix(randomSongCount))
             
+            // Select 0-3 random levels
+            let randomLevelCount = Int.random(in: 0...3)
+            let selectedLevels = Array(levels.shuffled().prefix(randomLevelCount))
+            
             newPost.id = UUID()
             newPost.title = "Sample Post \(i + 1)"
             newPost.content = "This is a sample post content for post number \(i + 1)."
@@ -32,6 +37,7 @@ struct PersistenceController {
             newPost.createdAt = Date().addingTimeInterval(Double(-i * 86400))
             newPost.genresList = selectedGenres
             newPost.selectedSongs = selectedSongs
+            newPost.selectedLevels = selectedLevels
             newPost.isMatched = Bool.random() // Randomly set match status for preview
         }
         

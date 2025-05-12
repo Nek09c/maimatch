@@ -4,6 +4,7 @@ import CoreData
 extension ForumPost {
     private static let genreSeparator = "|"
     private static let songSeparator = ","
+    private static let levelSeparator = ","
     
     var genresList: [Genre] {
         get {
@@ -34,6 +35,21 @@ extension ForumPost {
             }
             let newString = newValue.isEmpty ? nil : newValue.map { $0.id }.joined(separator: Self.songSeparator)
             self.setValue(newString, forKey: "songIdsString")
+        }
+    }
+    
+    var selectedLevels: [Level] {
+        get {
+            guard let levelString = self.value(forKey: "levelString") as? String else { return [] }
+            return levelString
+                .split(separator: Self.levelSeparator)
+                .compactMap { rawValue in
+                    Level.allCases.first { $0.rawValue == String(rawValue) }
+                }
+        }
+        set {
+            let newString = newValue.isEmpty ? nil : newValue.map { $0.rawValue }.joined(separator: Self.levelSeparator)
+            self.setValue(newString, forKey: "levelString")
         }
     }
 } 

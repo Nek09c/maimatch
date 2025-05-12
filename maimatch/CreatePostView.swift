@@ -10,7 +10,9 @@ struct CreatePostView: View {
     @State private var selectedLocation: ArcadeLocation
     @State private var selectedGenres: [Genre] = []
     @State private var selectedSongs: [SongModel] = []
+    @State private var selectedLevels: [Level] = []
     @State private var showGenreSelector = false
+    @State private var showLevelSelector = false
     
     @State private var isValid: Bool = false
     
@@ -63,6 +65,37 @@ struct CreatePostView: View {
                             }
                         }
                         .pickerStyle(MenuPickerStyle())
+                    }
+                }
+                
+                Section(header: Text("技術水平(可唔揀)")) {
+                    HStack {
+                        if selectedLevels.isEmpty {
+                            Text("未揀")
+                                .foregroundColor(.secondary)
+                        } else {
+                            ScrollView(.horizontal, showsIndicators: false) {
+                                HStack {
+                                    ForEach(selectedLevels) { level in
+                                        LevelChip(level: level) {
+                                            selectedLevels.removeAll(where: { $0 == level })
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        
+                        Spacer()
+                        
+                        Button(action: {
+                            showLevelSelector = true
+                        }) {
+                            Image(systemName: "plus.circle.fill")
+                                .foregroundColor(.blue)
+                        }
+                        .sheet(isPresented: $showLevelSelector) {
+                            LevelSelectorView(selectedLevels: $selectedLevels)
+                        }
                     }
                 }
                 
@@ -139,10 +172,86 @@ struct CreatePostView: View {
             authorName: authorName,
             location: selectedLocation,
             genres: selectedGenres,
-            songs: selectedSongs
+            songs: selectedSongs,
+            levels: selectedLevels
         )
         
         presentationMode.wrappedValue.dismiss()
+    }
+}
+
+// LevelChip view to display selected levels
+struct LevelChip: View {
+    let level: Level
+    let onRemove: () -> Void
+    
+    var body: some View {
+        HStack(spacing: 4) {
+            Text(level.displayName)
+                .font(.system(size: 14))
+                .foregroundColor(.white)
+            
+            Button(action: onRemove) {
+                Image(systemName: "xmark.circle.fill")
+                    .font(.system(size: 12))
+                    .foregroundColor(.white.opacity(0.8))
+            }
+        }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 5)
+        .background(Color(level.color))
+        .cornerRadius(14)
+    }
+}
+
+// LevelSelectorView to select difficulty levels
+struct LevelSelectorView: View {
+    @Binding var selectedLevels: [Level]
+    @Environment(\.presentationMode) var presentationMode
+    
+    var body: some View {
+        NavigationView {
+            List {
+                ForEach(Level.allCases) { level in
+                    Button(action: {
+                        toggleLevel(level)
+                    }) {
+                        HStack {
+                            Text(level.displayName)
+                                .foregroundColor(.white)
+                                .padding(.horizontal, 8)
+                                .padding(.vertical, 4)
+                                .background(Color(level.color))
+                                .cornerRadius(8)
+                            
+                            Spacer()
+                            
+                            if selectedLevels.contains(level) {
+                                Image(systemName: "checkmark")
+                                    .foregroundColor(.blue)
+                            }
+                        }
+                    }
+                    .foregroundColor(.primary)
+                }
+            }
+            .navigationTitle("選擇難度")
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Done") {
+                        presentationMode.wrappedValue.dismiss()
+                    }
+                }
+            }
+        }
+    }
+    
+    private func toggleLevel(_ level: Level) {
+        if selectedLevels.contains(level) {
+            selectedLevels.removeAll(where: { $0 == level })
+        } else {
+            selectedLevels.append(level)
+        }
     }
 }
 
