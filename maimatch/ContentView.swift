@@ -7,6 +7,7 @@
 
 import SwiftUI
 import CoreData
+import FirebaseFirestore
 
 struct ContentView: View {
     @Environment(\.managedObjectContext) private var viewContext
@@ -15,7 +16,11 @@ struct ContentView: View {
     @State private var statusFilter: StatusFilter = .all
     @State private var difficultyFilter: Level? = nil
     @State private var showingDifficultyPicker = false
+    @State private var refreshing = false
     let selectedLocation: ArcadeLocation
+    
+    // Store cloud listener
+    @State private var cloudListener: FirebaseFirestore.ListenerRegistration?
     
     @FetchRequest var posts: FetchedResults<ForumPost>
     
@@ -127,7 +132,14 @@ struct ContentView: View {
                 .padding(.bottom, 8)
                 
                 List {
-                    if filteredPosts.isEmpty {
+                    if viewModel.isLoading {
+                        HStack {
+                            Spacer()
+                            ProgressView()
+                                .padding()
+                            Spacer()
+                        }
+                    } else if filteredPosts.isEmpty {
                         Text("\(selectedLocation.displayName) \(statusFilter == .all ? "未有Post" : "未有\(statusFilter.rawValue)的Post")")
                             .foregroundColor(.secondary)
                             .padding()
@@ -223,6 +235,23 @@ struct ContentView: View {
                     }
                 }
                 .listStyle(InsetGroupedListStyle())
+                .refreshable {
+                    refreshing = true
+                    viewModel.loadPosts(for: selectedLocation)
+                    refreshing = false
+                }
+                
+                // Error message display
+                if let errorMessage = viewModel.errorMessage {
+                    Text(errorMessage)
+                        .font(.caption)
+                        .foregroundColor(.white)
+                        .padding(8)
+                        .background(Color.red.opacity(0.8))
+                        .cornerRadius(8)
+                        .padding(.horizontal)
+                        .padding(.bottom, 8)
+                }
             }
             .navigationTitle(selectedLocation.displayName)
             .toolbar {
@@ -232,6 +261,21 @@ struct ContentView: View {
                     } label: {
                         Image(systemName: "square.and.pencil")
                             .font(.system(size: 16, weight: .semibold))
+                    }
+                }
+                
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button {
+                        refreshing = true
+                        viewModel.loadPosts(for: selectedLocation)
+                        refreshing = false
+                    } label: {
+                        if refreshing || viewModel.isLoading {
+                            ProgressView()
+                                .scaleEffect(0.7)
+                        } else {
+                            Image(systemName: "arrow.clockwise")
+                        }
                     }
                 }
             }
@@ -292,6 +336,13 @@ struct ContentView: View {
             }
         }
         .withDefaultBackground()
+        .onAppear {
+            // Load initial data from cloud
+            viewModel.loadPosts(for: selectedLocation)
+            
+            // Setup real-time updates
+            cloudListener = viewModel.setupRealtimeUpdates(for: selectedLocation)
+        }
     }
 }
 
