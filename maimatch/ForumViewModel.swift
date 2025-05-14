@@ -7,6 +7,7 @@ import FirebaseFirestore
 class ForumViewModel: ObservableObject {
     let viewContext: NSManagedObjectContext
     private let cloudService: CloudPostService
+    private let authService: LocalAuthService
     private var cancellables = Set<AnyCancellable>()
     
     // State tracking
@@ -16,6 +17,9 @@ class ForumViewModel: ObservableObject {
     init(viewContext: NSManagedObjectContext) {
         self.viewContext = viewContext
         self.cloudService = CloudPostService(viewContext: viewContext)
+        self.authService = LocalAuthService()
+        
+        print("DEBUG: ForumViewModel initialized")
         
         // Subscribe to cloud service state updates
         cloudService.$isUploading
@@ -31,6 +35,10 @@ class ForumViewModel: ObservableObject {
     
     func createPost(title: String, content: String, authorName: String, location: ArcadeLocation, genres: [Genre], songs: [SongModel], levels: [Level]) {
         print("DEBUG: Creating post for location: \(location.rawValue)")
+        print("DEBUG: Post details - Title: \(title), Author: \(authorName)")
+        print("DEBUG: Selected genres: \(genres.map { $0.displayName }.joined(separator: ", "))")
+        print("DEBUG: Selected songs: \(songs.map { $0.title }.joined(separator: ", "))")
+        print("DEBUG: Selected levels: \(levels.map { $0.displayName }.joined(separator: ", "))")
         
         // Create the post locally in CoreData first
         let newPost = ForumPost(context: viewContext)
@@ -40,17 +48,62 @@ class ForumViewModel: ObservableObject {
         newPost.authorName = authorName
         newPost.location = location.rawValue
         newPost.createdAt = Date()
-        newPost.genresList = genres
-        newPost.selectedSongs = songs
-        newPost.selectedLevels = levels
+        
+        print("DEBUG: Setting genres, songs, and levels...")
+        
+        // Set genres - Check for errors
+        do {
+            newPost.genresList = genres
+        } catch {
+            print("ERROR: Failed to set genres: \(error)")
+        }
+        
+        // Set songs - Check for errors
+        do {
+            newPost.selectedSongs = songs
+        } catch {
+            print("ERROR: Failed to set songs: \(error)")
+        }
+        
+        // Set levels - Check for errors
+        do {
+            newPost.selectedLevels = levels
+        } catch {
+            print("ERROR: Failed to set levels: \(error)")
+        }
+        
         newPost.isMatched = false
         
         do {
-            try viewContext.save()
-            print("DEBUG: Successfully saved post locally with location: \(location.rawValue)")
+            // Verify post data before saving
+            print("DEBUG: Post data before saving:")
+            print("DEBUG: ID: \(newPost.id?.uuidString ?? "nil")")
+            print("DEBUG: Title: \(newPost.title ?? "nil")")
+            print("DEBUG: Content: \(newPost.content ?? "nil")")
+            print("DEBUG: Author: \(newPost.authorName ?? "nil")")
+            print("DEBUG: Location: \(newPost.location ?? "nil")")
             
-            // Now upload to cloud
-            cloudService.uploadPost(newPost)
+            // Save to CoreData
+            try viewContext.save()
+            print("DEBUG: Successfully saved post locally with ID: \(newPost.id?.uuidString ?? "unknown")")
+            
+            // Verify genres, songs, and levels after saving
+            print("DEBUG: Saved post genres: \(newPost.genresList.map { $0.displayName }.joined(separator: ", "))")
+            print("DEBUG: Saved post songs: \(newPost.selectedSongs.map { $0.title }.joined(separator: ", "))")
+            print("DEBUG: Saved post levels: \(newPost.selectedLevels.map { $0.displayName }.joined(separator: ", "))")
+            
+            // Mark post as created by current user for local ownership tracking
+            if let postId = newPost.id {
+                authService.markPostAsCreatedByCurrentUser(postID: postId)
+                
+                // Now upload to cloud
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+                    self?.cloudService.uploadPost(newPost)
+                }
+            } else {
+                print("ERROR: Cannot upload post - missing ID after save")
+                errorMessage = "無法上傳: 缺少ID"
+            }
             
         } catch {
             print("DEBUG: Error saving post locally: \(error)")
@@ -78,7 +131,14 @@ class ForumViewModel: ObservableObject {
     
     func deletePost(_ post: ForumPost) {
         guard let id = post.id else { return }
-        print("DEBUG: Deleting post with location: \(post.location ?? "unknown")")
+        print("DEBUG: Attempting to delete post with ID: \(id)")
+        
+        // Check if current user is the post creator
+        if !authService.isCurrentUserCreatorOfPost(postID: id) {
+            print("DEBUG: Cannot delete post - user is not the post creator")
+            self.errorMessage = "只有帖子創建者才能刪除帖子"
+            return
+        }
         
         // Delete locally first
         viewContext.delete(post)
@@ -100,10 +160,13 @@ class ForumViewModel: ObservableObject {
         }
     }
     
-    func toggleMatchStatus(post: ForumPost, currentUsername: String) {
-        // Only allow the post creator to toggle match status
-        guard post.authorName == currentUsername, let id = post.id else {
+    func toggleMatchStatus(post: ForumPost) {
+        guard let id = post.id else { return }
+        
+        // Check if current user is the post creator
+        if !authService.isCurrentUserCreatorOfPost(postID: id) {
             print("DEBUG: Cannot toggle match status - user is not the post creator")
+            self.errorMessage = "只有帖子創建者才能更改帖子狀態"
             return
         }
         
