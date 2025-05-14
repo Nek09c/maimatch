@@ -7,6 +7,9 @@ struct ForumPostView: View {
     @State private var showingUsernamePrompt = false
     @Environment(\.presentationMode) var presentationMode
     
+    // Auth service for checking post creator ownership
+    private let authService = LocalAuthService()
+    
     private let dateFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.dateStyle = .medium
@@ -27,7 +30,8 @@ struct ForumPostView: View {
     }
     
     private var isCreator: Bool {
-        return post.authorName == currentUsername
+        guard let postId = post.id else { return false }
+        return authService.isCurrentUserCreatorOfPost(postID: postId)
     }
     
     var body: some View {
@@ -82,7 +86,7 @@ struct ForumPostView: View {
                         
                         if isCreator {
                             Button(action: {
-                                viewModel.toggleMatchStatus(post: post, currentUsername: currentUsername)
+                                viewModel.toggleMatchStatus(post: post)
                                 // Force view to refresh by simulating a navigation action
                                 let impactFeedback = UIImpactFeedbackGenerator(style: .medium)
                                 impactFeedback.impactOccurred()
@@ -209,10 +213,11 @@ struct ForumPostView: View {
             Button("保存") {
                 if !currentUsername.isEmpty {
                     UserDefaults.standard.set(currentUsername, forKey: "username")
+                    authService.updateDisplayName(newName: currentUsername)
                 }
             }
         } message: {
-            Text("輸入您的用戶名以識別您是否為帖子創建者。")
+            Text("輸入您的用戶名以顯示在帖子中。您的裝置ID將用於識別您的帖子所有權。")
         }
         .onAppear {
             // Load username from UserDefaults

@@ -16,6 +16,9 @@ struct CreatePostView: View {
     
     @State private var isValid: Bool = false
     
+    // Auth service for device ID-based creator identification
+    private let authService = LocalAuthService()
+    
     // Create a formatter for placeholders
     private let placeholderDateFormatter: DateFormatter = {
         let formatter = DateFormatter()
@@ -155,6 +158,8 @@ struct CreatePostView: View {
             .onChange(of: content) { _ in validateForm() }
             .onChange(of: authorName) { _ in validateForm() }
             .onAppear {
+                // Load saved username
+                authorName = authService.getOrCreateDisplayName()
                 validateForm()
             }
         }
@@ -166,6 +171,11 @@ struct CreatePostView: View {
     }
     
     private func createPost() {
+        // Ensure display name is saved
+        if !authorName.isEmpty {
+            authService.updateDisplayName(newName: authorName)
+        }
+        
         viewModel.createPost(
             title: title,
             content: content,
