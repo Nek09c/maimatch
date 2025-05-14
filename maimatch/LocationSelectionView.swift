@@ -3,6 +3,7 @@ import SwiftUI
 struct LocationSelectionView: View {
     @State private var selectedLocation: ArcadeLocation?
     @State private var showingForumView = false
+    @State private var showingDebugView = false
     
     var body: some View {
         NavigationView {
@@ -16,6 +17,27 @@ struct LocationSelectionView: View {
                         NavigationLink(destination: ContentView(viewContext: PersistenceController.shared.container.viewContext, selectedLocation: location)) {
                             LocationCard(location: location)
                         }
+                    }
+                    
+                    // Add a button to access the debug view
+                    Button(action: {
+                        showingDebugView = true
+                    }) {
+                        HStack {
+                            Image(systemName: "wrench.and.screwdriver.fill")
+                                .foregroundColor(.orange)
+                            Text("Firebase Debug Tools")
+                                .fontWeight(.medium)
+                        }
+                        .padding()
+                        .background(
+                            RoundedRectangle(cornerRadius: 10)
+                                .stroke(Color.orange, lineWidth: 1)
+                        )
+                    }
+                    .padding(.top, 30)
+                    .sheet(isPresented: $showingDebugView) {
+                        FirebaseDebugView()
                     }
                 }
                 .padding()
