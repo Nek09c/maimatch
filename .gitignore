@@ -1,1 +1,112 @@
-maimatch.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved
+# Xcode
+#
+# gitignore for Swift/Xcode projects
+#
+## User settings
+xcuserdata/
+*.xcuserstate
+# Don't ignore all of project.xcworkspace, only the user-specific files
+project.xcworkspace/xcuserdata/
+# Don't ignore xcshareddata as it contains Package.resolved
+# xcshareddata/
+
+## Obj-C/Swift specific
+*.hmap
+*.ipa
+*.dSYM.zip
+*.dSYM
+
+## Playgrounds
+timeline.xctimeline
+playground.xcworkspace
+
+# Swift Package Manager
+.build/
+.swiftpm/
+# Don't ignore Package.resolved as we want to share exact dependency versions
+# Package.resolved
+
+# CocoaPods
+Pods/
+Podfile.lock
+
+# Carthage
+Carthage/Build/
+
+# Firebase configuration files (contains API keys)
+GoogleService-Info.plist
+maimatch/GoogleService-Info.plist
+
+# fastlane
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots/**/*.png
+fastlane/test_output
+
+# Code Injection
+iOSInjectionProject/
+
+# OS X Finder
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Icon must end with two \r
+Icon
+
+# Thumbnails
+._*
+
+# Files that might appear in the root of a volume
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+
+# Directories potentially created on remote AFP share
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+.apdisk
+
+# Backup files
+*.bak
+*.backup
+*~
+*.swp
+*.orig
+
+# Build artifacts
+build/
+DerivedData/
+
+# Sensitive environment files
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+
+# Debug logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Database files
+*.sqlite
+*.sqlite3
+*.db
+
+# Generated files
+generated_songs.swift
+backups/
+fix_info/
+new_files/
+
+# Local configuration
+override.xcconfig
