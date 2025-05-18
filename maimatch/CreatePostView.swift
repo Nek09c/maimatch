@@ -6,7 +6,7 @@ struct CreatePostView: View {
     
     @State private var title: String = ""
     @State private var content: String = ""
-    @State private var authorName: String = UserDefaults.standard.string(forKey: "username") ?? ""
+    @State private var authorName: String = ""
     @State private var selectedLocation: ArcadeLocation
     @State private var selectedGenres: [Genre] = []
     @State private var selectedSongs: [SongModel] = []
@@ -158,8 +158,7 @@ struct CreatePostView: View {
             .onChange(of: content) { _ in validateForm() }
             .onChange(of: authorName) { _ in validateForm() }
             .onAppear {
-                // Load saved username
-                authorName = authService.getOrCreateDisplayName()
+                // Remove auto-loading saved username
                 validateForm()
             }
         }
