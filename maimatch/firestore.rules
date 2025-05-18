@@ -1,0 +1,23 @@
+// Firestore rules for maimatch app
+// These rules should be used in the Firebase console at:
+// https://console.firebase.google.com/project/maimatch-69083/firestore/rules
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Allow anyone to read and write the posts collection
+    match /posts/{document=**} {
+      allow read: if true;  // Anyone can read posts
+      allow write: if true; // Anyone can write posts (since we're using device IDs for auth)
+    }
+    
+    // Allow anyone to read and write the debug_tests collection (for testing)
+    match /_test/{document=**} {
+      allow read, write: if true;
+    }
+    
+    match /debug_tests/{document=**} {
+      allow read, write: if true; 
+    }
+  }
+} 

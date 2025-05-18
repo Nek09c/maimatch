@@ -1,0 +1,67 @@
+import Foundation
+
+class SongDatabase {
+    static let shared = SongDatabase()
+    
+    let allSongs: [Song] = [
+        // Pop & Anime
+        Song(id: "a_1", title: "新宝島", category: .popAndAnime),
+        Song(id: "a_2", title: "ようこそジャパリパークへ", category: .popAndAnime),
+        Song(id: "a_3", title: "POP STAR", category: .popAndAnime),
+        Song(id: "a_4", title: "気まぐれロマンティック", category: .popAndAnime),
+        Song(id: "a_5", title: "前前前世", category: .popAndAnime),
+        
+        // Niconico & Vocaloid
+        Song(id: "n_1", title: "千本桜", category: .niconicoAndVocaloid),
+        Song(id: "n_2", title: "脳漿炸裂ガール", category: .niconicoAndVocaloid),
+        Song(id: "n_3", title: "初音ミクの消失", category: .niconicoAndVocaloid),
+        Song(id: "n_4", title: "ワールズエンド・ダンスホール", category: .niconicoAndVocaloid),
+        Song(id: "n_5", title: "ロキ", category: .niconicoAndVocaloid),
+        
+        // 東方project
+        Song(id: "t_1", title: "信仰は儚き人間の為に", category: .touhou),
+        Song(id: "t_2", title: "幽雅に咲かせ、墨染の桜", category: .touhou),
+        Song(id: "t_3", title: "緋色のDance", category: .touhou),
+        Song(id: "t_4", title: "感情の摩天楼", category: .touhou),
+        Song(id: "t_5", title: "ナイト・オブ・ナイツ", category: .touhou),
+        
+        // Game & Variety
+        Song(id: "g_1", title: "FREEDOM DiVE↓", category: .gameAndVariety),
+        Song(id: "g_2", title: "DRAGONLADY", category: .gameAndVariety),
+        Song(id: "g_3", title: "夜明けまであと3秒", category: .gameAndVariety),
+        Song(id: "g_4", title: "ゲームオーバー", category: .gameAndVariety),
+        Song(id: "g_5", title: "Halcyon", category: .gameAndVariety),
+        
+        // Maimai
+        Song(id: "m_1", title: "Nitrous Fury", category: .maimai),
+        Song(id: "m_2", title: "REVIVER オルタンシア・サーガ", category: .maimai),
+        Song(id: "m_3", title: "Glorious Crown", category: .maimai),
+        Song(id: "m_4", title: "Garakuta Doll Play", category: .maimai),
+        Song(id: "m_5", title: "Credits", category: .maimai),
+        
+        // Ongeki & Chunithm
+        Song(id: "o_1", title: "GENOCIDER", category: .ongekiAndChunithm),
+        Song(id: "o_2", title: "Singularity", category: .ongekiAndChunithm),
+        Song(id: "o_3", title: "Garakuta Doll Play", category: .ongekiAndChunithm),
+        Song(id: "o_4", title: "AMAZING MIGHTYYYY!!!!", category: .ongekiAndChunithm),
+        Song(id: "o_5", title: "Grievous Lady", category: .ongekiAndChunithm),
+        
+        // 宴会場
+        Song(id: "p_1", title: "KING", category: .partyRoom),
+        Song(id: "p_2", title: "アスノヨゾラ哨戒班", category: .partyRoom),
+        Song(id: "p_3", title: "宿命", category: .partyRoom),
+        Song(id: "p_4", title: "紅蓮華", category: .partyRoom),
+        Song(id: "p_5", title: "群青", category: .partyRoom)
+    ]
+    
+    // Get songs by category
+    func songs(forCategory category: SongCategory) -> [Song] {
+        return allSongs.filter { $0.category == category }
+    }
+    
+    // Search songs by title
+    func searchSongs(query: String) -> [Song] {
+        guard !query.isEmpty else { return [] }
+        return allSongs.filter { $0.title.lowercased().contains(query.lowercased()) }
+    }
+} 
